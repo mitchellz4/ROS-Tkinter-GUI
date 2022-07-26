@@ -60,14 +60,14 @@ def callback_cmd_vel(msg):
 	global cmd_vel_speed
 	cmd_vel_speed.set(msg.linear.x)
 
-rospy.Subscriber("/cmd_vel", Twist, callback_cmd_vel)
+rospy.Subscriber("/husky_velocity_controller/cmd_vel", Twist, callback_cmd_vel)
 
 # IMU Sub
 def callback_imu(data):
 	global imu_status
 	imu_status.set(data.data)
 
-rospy.Subscriber("/imu", Int16, callback_imu)
+rospy.Subscriber("/zed2i/zed_node/imu/data", Int16, callback_imu)
 
 
 
