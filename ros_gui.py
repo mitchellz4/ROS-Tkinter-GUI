@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 
 
@@ -6,12 +6,19 @@ import subprocess
 import time
 from tkinter import *
 
+import rospy
+from std_msgs.msg import Int16
+from geometry_msgs.msg import Twist
+
+
+
 # Used in the subprocess call as stdout, output stream value which is nothing in this case.
 windowid1 = ''
 
 
 # This will launch the base, imu, and teleop controls
 # Change Roslaunch to what your launch file is
+
 def ControllerCommand():
 	global windowid1
     # Subprocess is used to run new processes such as in this opening a terminal window and launching file
@@ -48,12 +55,21 @@ def RosbagCommand():
 	time.sleep(.1)	
 	subprocess.check_output(["xdotool", "type", "rosbag record --split 20024 -o /media/bramblebee/smartag/2022-Data/WVU_Organic_Farm_Trip2_2022-07-22/ -a" + "\n"])
 
-# Currently not working, but will subscribe to bring data back from cmd, angle and velocity
-def callback_cmd_vel(msg):	
-	global cmd_vel_angle
+
+def callback_cmd_vel(msg):
 	global cmd_vel_speed
-	cmd_vel_angle.set(msg.angular.z)
 	cmd_vel_speed.set(msg.linear.x)
+
+rospy.Subscriber("/cmd_vel", Twist, callback_cmd_vel)
+
+# IMU Sub
+def callback_imu(data):
+	global imu_status
+	imu_status.set(data.data)
+
+rospy.Subscriber("/imu", Int16, callback_imu)
+
+
 
 ## Plans to add RVIZ, IMU Subscriber, Realsense image view, ZED Image View ## -----------------------------------------------
 
@@ -72,6 +88,7 @@ root.title('Bramblebee GUI')
 # Allows the angle and speed value to be put on the main window
 cmd_vel_angle = DoubleVar()
 cmd_vel_speed = DoubleVar()
+callback_imu = IntVar()
 # The main frame
 frame = Frame(root)
 frame.pack()
@@ -102,22 +119,25 @@ b4.pack(side=LEFT)
 # Create text windows for cmd values
 frameE5 = Frame(frame01)
 frameE6 = Frame(frame01)
+frameE7 = Frame(frame01)
 frameE5.pack(side = LEFT)
 frameE6.pack(side = LEFT)
+frameE7.pack(side = LEFT)
 
 # Labels for the the cmd boxes
 label5 = Label(frameE5,text="cmd_speed")
 label6 = Label(frameE6,text="cmd_angle")
-
+label7 = Label(frameE7,text="IMU" )
 label5.pack(side=TOP)
-label6.pack(side=TOP)
+
+label7.pack(side=TOP)
 
 # Values for the cmd labels
 e5 = Label(frameE5, textvariable=cmd_vel_speed, width = 10,justify=RIGHT)
 e5.pack(side=RIGHT)
-e6 = Label(frameE6, textvariable=cmd_vel_angle, width = 10,justify=RIGHT)
-e6.pack(side=RIGHT)
 
+e7 = Label(frameE7, textvariable=callback_imu, width = 10, justify=RIGHT)
+e7.pack(side=RIGHT)
 
 # Opens 4 Terminal windows, with a .1 second delay in between each of them
 subprocess.call(["xdotool", "windowmove", "20", "20"])
